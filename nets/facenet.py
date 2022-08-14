@@ -11,8 +11,10 @@ class mobilenet(nn.Module):
         super(mobilenet, self).__init__()
         self.model = MobileNetV1()
         if pretrained:
-            state_dict = load_state_dict_from_url("https://github.com/bubbliiiing/facenet-pytorch/releases/download/v1.0/backbone_weights_of_mobilenetv1.pth", model_dir="model_data",
-                                                progress=True)
+            state_dict = load_state_dict_from_url(
+                "https://github.com/bubbliiiing/facenet-pytorch/releases/download/v1.0/backbone_weights_of_mobilenetv1.pth",
+                model_dir="model_data",
+                progress=True)
             self.model.load_state_dict(state_dict)
 
         del self.model.fc
@@ -24,13 +26,16 @@ class mobilenet(nn.Module):
         x = self.model.stage3(x)
         return x
 
+
 class inception_resnet(nn.Module):
     def __init__(self, pretrained):
         super(inception_resnet, self).__init__()
         self.model = InceptionResnetV1()
         if pretrained:
-            state_dict = load_state_dict_from_url("https://github.com/bubbliiiing/facenet-pytorch/releases/download/v1.0/backbone_weights_of_inception_resnetv1.pth", model_dir="model_data",
-                                                progress=True)
+            state_dict = load_state_dict_from_url(
+                "https://github.com/bubbliiiing/facenet-pytorch/releases/download/v1.0/backbone_weights_of_inception_resnetv1.pth",
+                model_dir="model_data",
+                progress=True)
             self.model.load_state_dict(state_dict)
 
     def forward(self, x):
@@ -48,9 +53,11 @@ class inception_resnet(nn.Module):
         x = self.model.repeat_3(x)
         x = self.model.block8(x)
         return x
-        
+
+
 class Facenet(nn.Module):
-    def __init__(self, backbone="mobilenet", dropout_keep_prob=0.5, embedding_size=128, num_classes=None, mode="train", pretrained=False):
+    def __init__(self, backbone="mobilenet", dropout_keep_prob=0.5, embedding_size=128, num_classes=None, mode="train",
+                 pretrained=False):
         super(Facenet, self).__init__()
         if backbone == "mobilenet":
             self.backbone = mobilenet(pretrained)
@@ -60,15 +67,15 @@ class Facenet(nn.Module):
             flat_shape = 1792
         else:
             raise ValueError('Unsupported backbone - `{}`, Use mobilenet, inception_resnetv1.'.format(backbone))
-        self.avg        = nn.AdaptiveAvgPool2d((1,1))
-        self.Dropout    = nn.Dropout(1 - dropout_keep_prob)
-        self.Bottleneck = nn.Linear(flat_shape, embedding_size,bias=False)
-        self.last_bn    = nn.BatchNorm1d(embedding_size, eps=0.001, momentum=0.1, affine=True)
+        self.avg = nn.AdaptiveAvgPool2d((1, 1))
+        self.Dropout = nn.Dropout(1 - dropout_keep_prob)
+        self.Bottleneck = nn.Linear(flat_shape, embedding_size, bias=False)
+        self.last_bn = nn.BatchNorm1d(embedding_size, eps=0.001, momentum=0.1, affine=True)
         if mode == "train":
             self.classifier = nn.Linear(embedding_size, num_classes)
 
     # updates
-    def forward(self, x, mode = "predict"):
+    def forward(self, x, mode="predict"):
         if mode == 'predict':
             x = self.backbone(x)
             x = self.avg(x)
@@ -84,7 +91,7 @@ class Facenet(nn.Module):
         x = self.Dropout(x)
         x = self.Bottleneck(x)
         before_normalize = self.last_bn(x)
-        
+
         x = F.normalize(before_normalize, p=2, dim=1)
         cls = self.classifier(before_normalize)
         return x, cls

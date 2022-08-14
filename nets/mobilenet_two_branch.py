@@ -41,7 +41,7 @@ class cbam(nn.Module):
     def __init__(self, planes, ratio):
         super(cbam, self).__init__()
         self.ca = ChannelAttention(planes, ratio)
-        self.sa = SpatialAttention(kernel_size=7)
+        self.sa = SpatialAttention(kernel_size=5)
 
     def forward(self, x):
         # ca_map = self.ca(x)
@@ -70,6 +70,62 @@ def conv_dw(inp, oup, stride=1):
         nn.ReLU6(),
     )
 
+def conv_dw_branch(inp, oup, stride=1):
+    return nn.Sequential(
+        nn.Conv2d(inp, inp, 3, stride, 1, groups=inp, bias=False),
+        nn.BatchNorm2d(inp),
+        nn.ReLU6(),
+
+        nn.Conv2d(inp, oup, 1, 1, 0, bias=False),
+        nn.BatchNorm2d(oup),
+        nn.ReLU6(),
+    )
+
+class testmodel(nn.Module):
+    def __init__(self):
+        super(testmodel, self).__init__()
+        # 160,160,3 -> 80,80,32
+        self.c1 = conv_bn(3, 32, 2)
+        # 80,80,32 -> 80,80,64
+        self.c2 = conv_dw(32, 64, 1)
+
+        # 80,80,64 -> 40,40,128
+        self.c3 = conv_dw(64, 128, 2)
+        self.c4 = conv_dw(128, 128, 1)
+
+        # 40,40,128 -> 20,20,256
+        self.c5 = conv_dw(128, 256, 2)
+        self.c6 = conv_dw(256, 256, 1)
+
+        self.c7 =conv_dw(256, 512, 2)
+        self.c8 =conv_dw(512, 512, 1)
+        self.c9 =conv_dw(512, 512, 1)
+        self.c10 =conv_dw(512, 512, 1)
+        self.c11 =conv_dw(512, 512, 1)
+        self.c12 =conv_dw(512, 512, 1)
+
+        self.c13 =conv_dw(512, 1024, 2)
+        self.c14 =conv_dw(1024, 1024, 1)
+
+    def forward(self, x):
+        x = self.c1(x)
+        x = self.c2(x)
+        x = self.c3(x)
+        x = self.c4(x)
+        x = self.c5(x)
+        x = self.c6(x)
+
+
+        x = self.c7(x)
+        x = self.c8(x)
+        x = self.c9(x)
+        x = self.c10(x)
+        x = self.c11(x)
+        x = self.c12(x)
+
+
+        x = self.c13(x)
+        x = self.c14(x)
 
 class MobileNetV1(nn.Module):
     def __init__(self):
@@ -126,11 +182,8 @@ class MobileNetV1(nn.Module):
         return x
 
 if __name__ == "__main__":
-    model = MobileNetV1()
-    del model.fc
-    del model.avg
+    model = testmodel()
+
     x = torch.zeros([2,3,160,160])
-    x = model.stage1(x)
-    x = model.stage2(x)
-    x = model.stage3(x)
+    x = model(x)
     print("test")
