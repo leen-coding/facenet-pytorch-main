@@ -67,6 +67,7 @@ class Facenet(nn.Module):
         if mode == "train":
             self.classifier = nn.Linear(embedding_size, num_classes)
 
+    # updates
     def forward(self, x, mode = "predict"):
         if mode == 'predict':
             x = self.backbone(x)

@@ -6,7 +6,7 @@ from functools import partial
 import numpy as np
 import torch
 
-
+#updates
 def triplet_loss(alpha = 0.2):
     def _triplet_loss(y_pred,Batch_size):
         anchor, positive, negative = y_pred[:int(Batch_size)], y_pred[int(Batch_size):int(2*Batch_size)], y_pred[int(2*Batch_size):]
