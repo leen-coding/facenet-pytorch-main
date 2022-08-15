@@ -24,6 +24,7 @@ class mobilenet(nn.Module):
         x = self.model.stage1(x)
         x = self.model.stage2(x)
         x = self.model.stage3(x)
+        x = self.model.cbam_fun(x)
         return x
 
 
